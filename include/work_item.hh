@@ -1,8 +1,18 @@
 #pragma once
 
+#include <memory>
 #include <utility>
 
 #include "util.hh"
+
+class AbstractWorkItem
+{
+public:
+    virtual ~AbstractWorkItem();
+    virtual void exec() = 0;
+};
+
+using WorkItemPtr = std::unique_ptr<AbstractWorkItem>;
 
 /**
  * A work item is an entity that represents work to be submitted
@@ -10,7 +20,7 @@
  * going to be called in the exec() function.
  */
 template <class Function, typename... ArgsC>
-class WorkItem
+class WorkItem : public AbstractWorkItem
 {
 public:
     WorkItem(Function f, ArgsC... args)

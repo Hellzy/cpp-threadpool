@@ -21,6 +21,7 @@ private:
     std::array<std::thread, POOL_SIZE> threads_;
     /* True if available, False otherwise */
     std::array<std::atomic_bool, POOL_SIZE> states_;
+    std::vector<WorkItemPtr> work_;
 };
 
 #include "impl/threadpool.hxx"

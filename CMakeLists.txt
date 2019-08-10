@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.0)
 project (cpp-threadpool)
 
+set (CMAKE_CXX_STANDARD 17)
+
 set (cpp-threadpool_VERSION_MAJOR 0)
 set (cpp-threadpool_VERSION_MINOR 1)
 
