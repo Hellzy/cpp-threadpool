@@ -15,9 +15,10 @@
 class Worker
 {
 public:
-    void start();
+    bool start();
     void stop();
     void push_work(WorkItemPtr&& wi_ptr);
+    void set_eventfd(int fd);
 
 private:
     void work();
@@ -25,5 +26,8 @@ private:
 private:
     std::thread thread;
     std::vector<WorkItemPtr> work_;
-    bool alive = true;
+    bool alive_ = true;
+
+    /* Eventfd used for communication w/ scheduler */
+    int eventfd_ = -1;
 };

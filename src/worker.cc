@@ -1,8 +1,14 @@
 #include "worker.hh"
 
-void Worker::start()
+bool Worker::start()
 {
-    this->thread = std::thread(&Worker::work, this);
+    if (eventfd_ != -1)
+    {
+        this->thread = std::thread(&Worker::work, this);
+        return true;
+    }
+
+    return false;
 }
 
 void Worker::stop()
@@ -15,11 +21,16 @@ void Worker::push_work(WorkItemPtr&& wi_ptr)
     this->work_.emplace_back(std::move(wi_ptr));
 }
 
+void Worker::set_eventfd(int fd)
+{
+    eventfd_ = fd;
+}
+
 void Worker::work()
 {
-    while (alive)
+    while (this->alive_)
     {
-        if (work_.size() > 0)
+        if (this->work_.size() > 0)
         {
             auto& wi_ptr = work_.back();
             wi_ptr->exec();

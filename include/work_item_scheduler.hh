@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <vector>
 
 #include "work_item.hh"
@@ -16,9 +17,17 @@ public:
     WorkItemScheduler(size_t workers_nb = 5);
     ~WorkItemScheduler();
 
+    void start();
     void submit(WorkItemPtr&& wi_ptr);
 
 private:
+    void work_dispatch();
+
+private:
     std::vector<Worker> workers_;
+    /* Array of eventfds to communicate with workers */
+    std::vector<uint64_t> workers_fds_;
     std::vector<WorkItemPtr> work_;
+    std::thread dispatcher_thread_;
+    int epoll_fd_ = -1;
 };
