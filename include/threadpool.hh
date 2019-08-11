@@ -7,6 +7,7 @@
 #include <future>
 
 #include "work_item.hh"
+#include "work_item_scheduler.hh"
 
 class ThreadPool
 {
@@ -18,10 +19,8 @@ public:
     void submit(Function&& f, Args&&... args);
 
 private:
-    std::array<std::thread, POOL_SIZE> threads_;
-    /* True if available, False otherwise */
-    std::array<std::atomic_bool, POOL_SIZE> states_;
     std::vector<WorkItemPtr> work_;
+    WorkItemScheduler sched_;
 };
 
 #include "impl/threadpool.hxx"
