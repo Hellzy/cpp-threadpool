@@ -10,8 +10,11 @@
 class ThreadPool
 {
 public:
-    ThreadPool() = default;
+    ThreadPool(bool start = true);
     ~ThreadPool() = default;
+
+    void start();
+    void stop();
 
     template <class Function, typename... Args>
     void submit(Function&& f, Args&&... args);

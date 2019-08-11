@@ -1,5 +1,7 @@
+#include <iostream>
 #include <sys/epoll.h>
-#include <sys/eventfd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include "events.hh"
@@ -14,22 +16,23 @@ WorkItemScheduler::WorkItemScheduler(size_t workers_nb)
 
     for (size_t i = 0; i < workers_nb; ++i)
     {
-        int fd = eventfd(0, EFD_NONBLOCK);
-        if (fd == -1)
+        int socketfds[2] = {0};
+        if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, socketfds) == -1)
             throw 2; //FIXME
 
-        struct epoll_event ev = {0};
+        struct epoll_event ev;
         ev.events = EPOLLIN;
-        ev.data.fd = fd;
+        ev.data.fd = socketfds[0];
 
-        if (epoll_ctl(this->epoll_fd_, EPOLL_CTL_ADD, fd, &ev) == -1)
+        if (epoll_ctl(this->epoll_fd_, EPOLL_CTL_ADD, socketfds[0], &ev) == -1)
         {
-            close(fd);
+            close(socketfds[0]);
+            close(socketfds[1]);
             throw 2; //FIXME
         }
 
-        this->workers_[i].set_eventfd(fd);
-        this->fd_worker_map_[fd] = i;
+        this->workers_[i].set_socketfd(socketfds[1]);
+        this->fd_worker_map_[socketfds[0]] = i;
     }
 }
 
@@ -38,21 +41,29 @@ WorkItemScheduler::~WorkItemScheduler()
     for (auto& w : workers_)
         w.stop();
     this->stop();
+    close(this->epoll_fd_);
+    //TODO: close all sockets stored in map
 }
 
 void WorkItemScheduler::start()
 {
     this->active_ = true;
+
+    for (auto& w : this->workers_)
+        w.start();
+
     this->dispatcher_thread_ = std::thread(&WorkItemScheduler::work_dispatch,
                                            this);
 }
 
 void WorkItemScheduler::stop()
 {
+    this->active_ = false;
     if (this->dispatcher_thread_.joinable())
         this->dispatcher_thread_.join();
 
-    this->active_ = false;
+    for (auto& w : this->workers_)
+        w.stop();
 }
 
 void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
@@ -78,6 +89,9 @@ void WorkItemScheduler::work_dispatch()
         {
         case Events::WORK_REQ:
             this->send_work(this->fd_worker_map_[ev.data.fd]);
+            break;
+        default:
+            break;
         }
     }
 }
@@ -86,8 +100,9 @@ void WorkItemScheduler::send_work(size_t worker_idx)
 {
     if (this->work_.size() > 0)
     {
-        WorkItemPtr& wi_ptr = this->work_.back();
-        this->work_.pop_back();
+        std::cout << "Sending work to worker " << worker_idx << '\n';
+        WorkItemPtr wi_ptr = std::move(this->work_.front());
+        this->work_.pop_front();
         this->workers_[worker_idx].push_work(std::move(wi_ptr));
     }
 }

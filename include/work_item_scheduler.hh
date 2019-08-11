@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <deque>
 #include <map>
 #include <vector>
 
@@ -28,11 +29,11 @@ private:
 
 private:
     std::vector<Worker> workers_;
-    std::vector<WorkItemPtr> work_;
+    std::deque<WorkItemPtr> work_;
     std::thread dispatcher_thread_;
     int epoll_fd_ = -1;
     bool active_ = false;
 
-    /* A map to keep track of which fd belongs to which worker */
+    /* A map to keep track of which socket fd belongs to which worker */
     std::map<uint64_t, size_t> fd_worker_map_;
 };

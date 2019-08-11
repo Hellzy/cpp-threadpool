@@ -1,13 +1,17 @@
 #include "threadpool.hh"
 
-static void hello(int a, int b, int c)
+ThreadPool::ThreadPool(bool start)
 {
-    if (a || b || c)
-        return;
+    if (start)
+        this->start();
 }
 
-void tst()
+void ThreadPool::start()
 {
-    ThreadPool t;
-    t.submit(hello, 0, 0, 1);
+    this->sched_.start();
+}
+
+void ThreadPool::stop()
+{
+    this->sched_.stop();
 }

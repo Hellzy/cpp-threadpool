@@ -1,7 +1,7 @@
 #pragma once
+#include <deque>
 #include <thread>
 #include <utility>
-#include <vector>
 
 #include "work_item.hh"
 
@@ -21,16 +21,16 @@ public:
     bool start();
     void stop();
     void push_work(WorkItemPtr&& wi_ptr);
-    void set_eventfd(int fd);
+    void set_socketfd(int fd);
 
 private:
     void work();
 
 private:
     std::thread thread;
-    std::vector<WorkItemPtr> work_;
-    bool alive_ = true;
+    std::deque<WorkItemPtr> work_;
+    bool alive_ = false;
 
-    /* Eventfd used for communication w/ scheduler */
-    int eventfd_ = -1;
+    /* Socket used for communication w/ scheduler */
+    int socketfd_ = -1;
 };
