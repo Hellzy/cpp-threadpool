@@ -11,8 +11,8 @@
 class ThreadPool
 {
 public:
-    ThreadPool();
-    ~ThreadPool();
+    ThreadPool() = default;
+    ~ThreadPool() = default;
 
     template <class Function, typename... Args>
     void submit(Function&& f, Args&&... args);
