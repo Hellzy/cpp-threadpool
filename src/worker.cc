@@ -1,5 +1,10 @@
 #include "worker.hh"
 
+Worker::~Worker()
+{
+    this->stop();
+}
+
 bool Worker::start()
 {
     if (eventfd_ != -1)
@@ -13,7 +18,9 @@ bool Worker::start()
 
 void Worker::stop()
 {
-    this->thread.join();
+    this->alive_ = false;
+    if (this->thread.joinable())
+        this->thread.join();
 }
 
 void Worker::push_work(WorkItemPtr&& wi_ptr)

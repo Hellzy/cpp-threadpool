@@ -37,12 +37,19 @@ WorkItemScheduler::~WorkItemScheduler()
 {
     for (auto& w : workers_)
         w.stop();
+    this->stop();
 }
 
 void WorkItemScheduler::start()
 {
     this->dispatcher_thread_ = std::thread(&WorkItemScheduler::work_dispatch,
                                            this);
+}
+
+void WorkItemScheduler::stop()
+{
+    if (this->dispatcher_thread_.joinable())
+        this->dispatcher_thread_.join();
 }
 
 void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
@@ -52,8 +59,10 @@ void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
 
 void WorkItemScheduler::work_dispatch()
 {
+#if 0
     while (true)
     {
         //epoll loop + dispatch
     }
+#endif
 }

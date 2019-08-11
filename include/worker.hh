@@ -15,6 +15,9 @@
 class Worker
 {
 public:
+    Worker() = default;
+    ~Worker();
+
     bool start();
     void stop();
     void push_work(WorkItemPtr&& wi_ptr);

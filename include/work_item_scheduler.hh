@@ -18,6 +18,7 @@ public:
     ~WorkItemScheduler();
 
     void start();
+    void stop();
     void submit(WorkItemPtr&& wi_ptr);
 
 private:
