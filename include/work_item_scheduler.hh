@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <map>
 #include <vector>
 
 #include "work_item.hh"
@@ -23,12 +24,15 @@ public:
 
 private:
     void work_dispatch();
+    void send_work(size_t worker_idx);
 
 private:
     std::vector<Worker> workers_;
-    /* Array of eventfds to communicate with workers */
-    std::vector<uint64_t> workers_fds_;
     std::vector<WorkItemPtr> work_;
     std::thread dispatcher_thread_;
     int epoll_fd_ = -1;
+    bool active_ = false;
+
+    /* A map to keep track of which fd belongs to which worker */
+    std::map<uint64_t, size_t> fd_worker_map_;
 };
