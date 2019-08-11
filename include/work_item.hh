@@ -8,7 +8,7 @@
 class AbstractWorkItem
 {
 public:
-    virtual ~AbstractWorkItem();
+    virtual ~AbstractWorkItem() {};
     virtual void exec() = 0;
 };
 
@@ -27,8 +27,9 @@ public:
         : f_(f)
         , args_(args...)
     {}
+    ~WorkItem() = default;
 
-    void exec() { exec(args_); }
+    void exec() override { exec(args_); }
 
 private:
     template <typename... Args, int... Idxs>

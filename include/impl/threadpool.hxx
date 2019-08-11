@@ -6,6 +6,6 @@
 template <class Function, typename... Args>
 void ThreadPool::submit(Function&& f, Args&&... args)
 {
-    //TODO: get free thread from pool
-    //std::move
+    auto wi_ptr = std::make_unique<WorkItem<Function, Args...>>(f, args...);
+    this->work_.emplace_back(std::move(wi_ptr));
 }
