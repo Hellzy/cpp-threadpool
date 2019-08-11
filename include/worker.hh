@@ -1,4 +1,8 @@
 #pragma once
+#include <thread>
+#include <utility>
+#include <vector>
+
 #include "work_item.hh"
 
 /*
@@ -10,4 +14,16 @@
  */
 class Worker
 {
+public:
+    void start();
+    void stop();
+    void push_work(WorkItemPtr&& wi_ptr);
+
+private:
+    void work();
+
+private:
+    std::thread thread;
+    std::vector<WorkItemPtr> work_;
+    bool alive = true;
 };

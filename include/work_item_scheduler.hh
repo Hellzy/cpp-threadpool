@@ -1,5 +1,8 @@
 #pragma once
+#include <vector>
+
 #include "work_item.hh"
+#include "worker.hh"
 
 /*
  * Scheduler class responsible for scheduling workers.
@@ -10,6 +13,12 @@
 class WorkItemScheduler
 {
 public:
+    WorkItemScheduler(size_t workers_nb = 5);
+    ~WorkItemScheduler();
+
+    void submit(WorkItemPtr&& wi_ptr);
 
 private:
+    std::vector<Worker> workers_;
+    std::vector<WorkItemPtr> work_;
 };

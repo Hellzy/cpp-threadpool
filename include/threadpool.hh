@@ -3,8 +3,6 @@
 #define POOL_SIZE 5
 
 #include <array>
-#include <vector>
-#include <future>
 
 #include "work_item.hh"
 #include "work_item_scheduler.hh"
@@ -19,7 +17,6 @@ public:
     void submit(Function&& f, Args&&... args);
 
 private:
-    std::vector<WorkItemPtr> work_;
     WorkItemScheduler sched_;
 };
 
