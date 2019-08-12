@@ -25,6 +25,7 @@ bool Worker::start()
 void Worker::stop()
 {
     this->alive_ = false;
+
     if (this->thread.joinable())
         this->thread.join();
 }
@@ -41,7 +42,7 @@ void Worker::set_socketfd(int fd)
 
 void Worker::work()
 {
-    while (this->alive_)
+    while (this->alive_ || this->work_.size() > 0)
     {
         if (this->work_.size() > 0)
         {

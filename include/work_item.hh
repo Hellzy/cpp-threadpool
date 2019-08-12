@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+#include <future>
 #include <memory>
 #include <utility>
 
@@ -23,9 +25,11 @@ template <class Function, typename... ArgsC>
 class WorkItem : public AbstractWorkItem
 {
 public:
+    using RawFType = typename std::remove_reference<typename std::remove_pointer<Function>::type>::type;
+
     WorkItem(Function f, ArgsC... args)
-        : f_(f)
-        , args_(args...)
+        : args_(args...)
+        , task(f)
     {}
     ~WorkItem() = default;
 
@@ -35,7 +39,7 @@ private:
     template <typename... Args, int... Idxs>
     void exec(std::tuple<Args...>& args, util::idx<Idxs...>)
     {
-        f_(std::get<Idxs>(args)...);
+        task(std::get<Idxs>(args)...);
     }
 
     template <typename... Args>
@@ -45,6 +49,6 @@ private:
     }
 
 private:
-    Function f_;
     std::tuple<ArgsC...> args_;
+    std::packaged_task<RawFType> task;
 };

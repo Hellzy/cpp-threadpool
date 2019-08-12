@@ -1,4 +1,3 @@
-#include <iostream>
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -73,7 +72,7 @@ void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
 
 void WorkItemScheduler::work_dispatch()
 {
-    while (this->active_)
+    while (this->active_ || this->work_.size() > 0)
     {
         struct epoll_event ev = {0};
         int rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
@@ -100,7 +99,6 @@ void WorkItemScheduler::send_work(size_t worker_idx)
 {
     if (this->work_.size() > 0)
     {
-        std::cout << "Sending work to worker " << worker_idx << '\n';
         WorkItemPtr wi_ptr = std::move(this->work_.front());
         this->work_.pop_front();
         this->workers_[worker_idx].push_work(std::move(wi_ptr));
