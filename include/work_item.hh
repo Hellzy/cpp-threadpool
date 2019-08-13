@@ -32,6 +32,7 @@ public:
     ~WorkItem() = default;
 
     void exec() override { exec(args_); }
+    auto get_future() { return task.get_future(); }
 
 private:
     template <typename... Args, int... Idxs>

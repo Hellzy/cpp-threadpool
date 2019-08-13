@@ -16,8 +16,12 @@ public:
     void start();
     void stop();
 
+    /*
+     * Submits a work function to the scheduler
+     * Returns a std::future
+     */
     template <class Function, typename... Args>
-    void submit(Function&& f, Args&&... args);
+    auto submit(Function&& f, Args&&... args);
 
 private:
     WorkItemScheduler sched_;
