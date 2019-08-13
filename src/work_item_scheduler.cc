@@ -81,14 +81,24 @@ void WorkItemScheduler::work_dispatch()
     while (this->active_ || this->work_.size() > 0)
     {
         struct epoll_event ev = {0};
-        int rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
+        int rv = 0;
 
-        if (rv == -1)
-            throw SYS_ERROR(errno, "Call to epoll_wait(2) failed");
+        do
+        {
+            rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
+
+            if (rv == -1 && errno != EINTR)
+                throw SYS_ERROR(errno, "Call to epoll_wait(2) failed");
+        } while (rv == -1);
 
         uint64_t event = -1;
-        if (read(ev.data.fd, &event, sizeof(event)) == -1)
-            throw SYS_ERROR(errno, "Call to read(2) failed");
+        do
+        {
+            rv = read(ev.data.fd, &event, sizeof(event));
+
+            if (rv == -1 && errno != EINTR)
+                throw SYS_ERROR(errno, "Call to read(2) failed");
+        } while (rv == -1);
 
         switch (event)
         {
