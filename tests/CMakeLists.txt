@@ -1,0 +1,12 @@
+add_executable(test_basic basic.cc)
+target_link_libraries(test_basic PUBLIC tpool)
+add_test(NAME basic COMMAND test_basic 1 2 3)
+set_tests_properties (basic PROPERTIES PASS_REGULAR_EXPRESSION "1 2 3\n")
+
+add_executable(test_basic_fut basic_fut.cc)
+target_link_libraries(test_basic_fut PUBLIC tpool)
+add_test(NAME basic_fut COMMAND test_basic_fut)
+
+
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS test_basic
+                                                               test_basic_fut)
