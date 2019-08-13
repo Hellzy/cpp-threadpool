@@ -16,7 +16,8 @@
 class WorkItemScheduler
 {
 public:
-    WorkItemScheduler(size_t workers_nb = 5);
+    WorkItemScheduler(size_t workers_nb =
+            std::thread::hardware_concurrency() / 2);
     ~WorkItemScheduler();
 
     void start();
