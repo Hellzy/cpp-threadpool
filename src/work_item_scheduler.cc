@@ -25,7 +25,7 @@ WorkItemScheduler::WorkItemScheduler(size_t workers_nb)
         if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, socketfds) == -1)
             throw SYS_ERROR(errno, "Call to socketpair(2) failed");
 
-        struct epoll_event ev;
+        struct epoll_event ev = {0};
         ev.events = EPOLLIN;
         ev.data.fd = socketfds[0];
 
