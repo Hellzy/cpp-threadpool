@@ -28,6 +28,8 @@ LD_LIBRARY_PATH=path/to/libtpool.so/folder
 
 ### Basic example
 
+#### Non-void return type
+
 ```C++
 #include <cassert>
 
@@ -47,6 +49,29 @@ int main()
 
     auto fut = t.submit(sum, a, b);
     assert(fut.get() == sum(a, b));
+
+    return 0;
+}
+```
+
+#### void return type
+
+```C++
+#include <iostream>
+#include <string>
+
+#include "threadpool.hh"
+
+static void disp(const std::string& str)
+{
+    std::cout << str << '\n';
+}
+
+int main()
+{
+    ThreadPool t;
+    auto fut = t.submit(disp, "Hello World!");
+    fut.wait();
 
     return 0;
 }
