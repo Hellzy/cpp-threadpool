@@ -1,23 +1,29 @@
+#include <errno.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+
+#include <system_error>
 #include <unistd.h>
 
 #include "events.hh"
 #include "work_item_scheduler.hh"
+
+#define SYS_ERROR(errno, msg)\
+    std::system_error(std::make_error_code(std::errc(errno)), (msg))
 
 WorkItemScheduler::WorkItemScheduler(size_t workers_nb)
     : workers_(workers_nb)
 {
     this->epoll_fd_ = epoll_create1(0);
     if (this->epoll_fd_ == -1)
-        throw 2;//FIXME
+        throw SYS_ERROR(errno, "Call to epoll_create1(2) failed");
 
     for (size_t i = 0; i < workers_nb; ++i)
     {
         int socketfds[2] = {0};
         if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, socketfds) == -1)
-            throw 2; //FIXME
+            throw SYS_ERROR(errno, "Call to socketpair(2) failed");
 
         struct epoll_event ev;
         ev.events = EPOLLIN;
@@ -27,7 +33,7 @@ WorkItemScheduler::WorkItemScheduler(size_t workers_nb)
         {
             close(socketfds[0]);
             close(socketfds[1]);
-            throw 2; //FIXME
+            throw SYS_ERROR(errno, "Call to epoll_ctl(2) failed");
         }
 
         this->workers_[i].set_socketfd(socketfds[1]);
@@ -78,11 +84,11 @@ void WorkItemScheduler::work_dispatch()
         int rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
 
         if (rv == -1)
-            throw 2; //FIXME
+            throw SYS_ERROR(errno, "Call to epoll_wait(2) failed");
 
         uint64_t event = -1;
         if (read(ev.data.fd, &event, sizeof(event)) == -1)
-            throw 2; //FIXME
+            throw SYS_ERROR(errno, "Call to read(2) failed");
 
         switch (event)
         {
