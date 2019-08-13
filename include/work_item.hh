@@ -25,8 +25,6 @@ template <class Function, typename... ArgsC>
 class WorkItem : public AbstractWorkItem
 {
 public:
-    using RawFType = typename std::remove_reference<typename std::remove_pointer<Function>::type>::type;
-
     WorkItem(Function f, ArgsC... args)
         : args_(args...)
         , task(f)
@@ -50,5 +48,5 @@ private:
 
 private:
     std::tuple<ArgsC...> args_;
-    std::packaged_task<RawFType> task;
+    std::packaged_task<typename util::FType<Function>::RawT> task;
 };
