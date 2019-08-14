@@ -43,14 +43,15 @@ WorkItemScheduler::WorkItemScheduler(size_t workers_nb)
 
 WorkItemScheduler::~WorkItemScheduler()
 {
-    for (auto& w : workers_)
-        w.stop();
-
     this->stop();
-    close(this->epoll_fd_);
+    this->dispatcher_thread_.join();
 
     for (const auto& pair : this->fd_worker_map_)
         close(pair.first);
+    close(this->epoll_fd_);
+
+    for (auto& w : this->workers_)
+        w.stop();
 }
 
 void WorkItemScheduler::start()
@@ -67,11 +68,6 @@ void WorkItemScheduler::start()
 void WorkItemScheduler::stop()
 {
     this->active_ = false;
-    if (this->dispatcher_thread_.joinable())
-        this->dispatcher_thread_.join();
-
-    for (auto& w : this->workers_)
-        w.stop();
 }
 
 void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
@@ -81,7 +77,7 @@ void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
 
 void WorkItemScheduler::work_dispatch()
 {
-    while (this->active_ || this->work_.size() > 0)
+    while (this->active_ || !this->work_.empty())
     {
         struct epoll_event ev = {0};
         int rv = 0;
@@ -105,11 +101,11 @@ void WorkItemScheduler::work_dispatch()
 
         switch (event)
         {
-        case Events::WORK_REQ:
-            this->send_work(this->fd_worker_map_[ev.data.fd]);
-            break;
-        default:
-            break;
+            case Events::WORK_REQ:
+                this->send_work(this->fd_worker_map_[ev.data.fd]);
+                break;
+            default:
+                break;
         }
     }
 }

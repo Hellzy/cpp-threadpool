@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 
 #include "events.hh"
@@ -7,6 +6,7 @@
 Worker::~Worker()
 {
     this->stop();
+    this->thread.join();
     close(this->socketfd_);
 }
 
@@ -25,9 +25,6 @@ bool Worker::start()
 void Worker::stop()
 {
     this->alive_ = false;
-
-    if (this->thread.joinable())
-        this->thread.join();
 }
 
 void Worker::push_work(WorkItemPtr&& wi_ptr)
@@ -42,9 +39,9 @@ void Worker::set_socketfd(int fd)
 
 void Worker::work()
 {
-    while (this->alive_ || this->work_.size() > 0)
+    while (this->alive_ || !this->work_.empty())
     {
-        if (this->work_.size() > 0)
+        if (!this->work_.empty())
         {
             auto& wi_ptr = work_.front();
             wi_ptr->exec();
