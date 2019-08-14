@@ -25,7 +25,7 @@ WorkItemScheduler::WorkItemScheduler(size_t workers_nb)
         if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, socketfds) == -1)
             throw SYS_ERROR(errno, "Call to socketpair(2) failed");
 
-        struct epoll_event ev;
+        struct epoll_event ev = {0};
         ev.events = EPOLLIN;
         ev.data.fd = socketfds[0];
 
@@ -45,9 +45,12 @@ WorkItemScheduler::~WorkItemScheduler()
 {
     for (auto& w : workers_)
         w.stop();
+
     this->stop();
     close(this->epoll_fd_);
-    //TODO: close all sockets stored in map
+
+    for (const auto& pair : this->fd_worker_map_)
+        close(pair.first);
 }
 
 void WorkItemScheduler::start()
@@ -81,14 +84,24 @@ void WorkItemScheduler::work_dispatch()
     while (this->active_ || this->work_.size() > 0)
     {
         struct epoll_event ev = {0};
-        int rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
+        int rv = 0;
 
-        if (rv == -1)
-            throw SYS_ERROR(errno, "Call to epoll_wait(2) failed");
+        do
+        {
+            rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
+
+            if (rv == -1 && errno != EINTR)
+                throw SYS_ERROR(errno, "Call to epoll_wait(2) failed");
+        } while (rv == -1);
 
         uint64_t event = -1;
-        if (read(ev.data.fd, &event, sizeof(event)) == -1)
-            throw SYS_ERROR(errno, "Call to read(2) failed");
+        do
+        {
+            rv = read(ev.data.fd, &event, sizeof(event));
+
+            if (rv == -1 && errno != EINTR)
+                throw SYS_ERROR(errno, "Call to read(2) failed");
+        } while (rv == -1);
 
         switch (event)
         {

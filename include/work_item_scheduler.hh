@@ -16,7 +16,8 @@
 class WorkItemScheduler
 {
 public:
-    WorkItemScheduler(size_t workers_nb = 5);
+    WorkItemScheduler(size_t workers_nb =
+            std::thread::hardware_concurrency() / 2);
     ~WorkItemScheduler();
 
     void start();
@@ -35,5 +36,5 @@ private:
     bool active_ = false;
 
     /* A map to keep track of which socket fd belongs to which worker */
-    std::map<uint64_t, size_t> fd_worker_map_;
+    std::map<int, size_t> fd_worker_map_;
 };

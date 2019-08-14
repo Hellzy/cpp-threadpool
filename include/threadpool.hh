@@ -1,7 +1,5 @@
 #pragma once
 
-#define POOL_SIZE 5
-
 #include <array>
 
 #include "work_item.hh"
