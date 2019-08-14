@@ -45,9 +45,12 @@ WorkItemScheduler::~WorkItemScheduler()
 {
     for (auto& w : workers_)
         w.stop();
+
     this->stop();
     close(this->epoll_fd_);
-    //TODO: close all sockets stored in map
+
+    for (const auto& pair : this->fd_worker_map_)
+        close(pair.first);
 }
 
 void WorkItemScheduler::start()
