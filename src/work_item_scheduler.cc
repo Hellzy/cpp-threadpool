@@ -43,14 +43,15 @@ WorkItemScheduler::WorkItemScheduler(size_t workers_nb)
 
 WorkItemScheduler::~WorkItemScheduler()
 {
-    for (auto& w : workers_)
-        w.stop();
-
     this->stop();
-    close(this->epoll_fd_);
+    this->dispatcher_thread_.join();
 
     for (const auto& pair : this->fd_worker_map_)
         close(pair.first);
+    close(this->epoll_fd_);
+
+    for (auto& w : this->workers_)
+        w.stop();
 }
 
 void WorkItemScheduler::start()
@@ -67,11 +68,6 @@ void WorkItemScheduler::start()
 void WorkItemScheduler::stop()
 {
     this->active_ = false;
-    if (this->dispatcher_thread_.joinable())
-        this->dispatcher_thread_.join();
-
-    for (auto& w : this->workers_)
-        w.stop();
 }
 
 void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
@@ -81,45 +77,57 @@ void WorkItemScheduler::submit(WorkItemPtr&& wi_ptr)
 
 void WorkItemScheduler::work_dispatch()
 {
-    while (this->active_ || this->work_.size() > 0)
+    bool skip_polling = false;
+    struct epoll_event ev = {0};
+    Events event = Events::NONE;
+
+    while (this->active_ || !this->work_.empty())
     {
-        struct epoll_event ev = {0};
         int rv = 0;
 
-        do
+        if (!skip_polling)
         {
-            rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
+            ev = {0};
+            do
+            {
+                rv = epoll_wait(this->epoll_fd_, &ev, 1, 100);
+                if (rv == -1 && errno != EINTR)
+                    throw SYS_ERROR(errno, "Call to epoll_wait(2) failed");
+            } while (rv == -1);
 
-            if (rv == -1 && errno != EINTR)
-                throw SYS_ERROR(errno, "Call to epoll_wait(2) failed");
-        } while (rv == -1);
+            if (rv == 0)
+                continue;
 
-        uint64_t event = -1;
-        do
-        {
-            rv = read(ev.data.fd, &event, sizeof(event));
-
-            if (rv == -1 && errno != EINTR)
-                throw SYS_ERROR(errno, "Call to read(2) failed");
-        } while (rv == -1);
+            do
+            {
+                rv = read(ev.data.fd, &event, sizeof(event));
+                if (rv == -1 && errno != EINTR)
+                    throw SYS_ERROR(errno, "Call to read(2) failed");
+            } while (rv == -1);
+        }
 
         switch (event)
         {
-        case Events::WORK_REQ:
-            this->send_work(this->fd_worker_map_[ev.data.fd]);
-            break;
-        default:
-            break;
+            case Events::WORK_REQ:
+                skip_polling =
+                    !this->try_send_work(this->fd_worker_map_[ev.data.fd]);
+                break;
+            default:
+                skip_polling = false;
+                break;
         }
     }
 }
 
-void WorkItemScheduler::send_work(size_t worker_idx)
+bool WorkItemScheduler::try_send_work(size_t worker_idx)
 {
-    if (this->work_.size() > 0)
+    if (!this->work_.empty())
     {
         WorkItemPtr wi_ptr = std::move(this->work_.front());
         this->work_.pop_front();
         this->workers_[worker_idx].push_work(std::move(wi_ptr));
+        return true;
     }
+
+    return false;
 }
