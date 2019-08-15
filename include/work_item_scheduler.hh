@@ -26,7 +26,7 @@ public:
 
 private:
     void work_dispatch();
-    void send_work(size_t worker_idx);
+    bool try_send_work(size_t worker_idx);
 
 private:
     std::vector<Worker> workers_;

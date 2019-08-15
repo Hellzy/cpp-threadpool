@@ -39,6 +39,8 @@ void Worker::set_socketfd(int fd)
 
 void Worker::work()
 {
+    bool need_work = true;
+
     while (this->alive_ || !this->work_.empty())
     {
         if (!this->work_.empty())
@@ -46,12 +48,14 @@ void Worker::work()
             auto& wi_ptr = work_.front();
             wi_ptr->exec();
             this->work_.pop_front();
+            need_work = true;
         }
-        else
+        else if (need_work)
         {
             /* Ask scheduler for work */
             uint64_t event = Events::WORK_REQ;
             write(this->socketfd_, &event, sizeof(event));
+            need_work = false;
         }
     }
 }
