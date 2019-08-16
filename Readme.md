@@ -70,8 +70,7 @@ static void disp(const std::string& str)
 int main()
 {
     ThreadPool t;
-    auto fut = t.submit(disp, "Hello World!");
-    fut.wait();
+    t.submit(disp, "Hello World!");
 
     return 0;
 }

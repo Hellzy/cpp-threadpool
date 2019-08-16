@@ -21,8 +21,7 @@ int main(int argc, char** argv)
     int c = std::stoi(argv[3]);
 
     ThreadPool t;
-    auto fut = t.submit(hello, a, b, c);
-    fut.wait();
+    t.submit(hello, a, b, c);
 
     return 0;
 }
