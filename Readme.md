@@ -76,10 +76,7 @@ int main()
 }
 ```
 
-## Misc
+## What's next?
 
-Branches:
-
-- master: stable release
-- dev: features development
-- next: test release
+- Working on introducing scheduled tasks
+- Maybe try to introduce something like sequential streams mechanics
