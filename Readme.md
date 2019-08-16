@@ -70,17 +70,13 @@ static void disp(const std::string& str)
 int main()
 {
     ThreadPool t;
-    auto fut = t.submit(disp, "Hello World!");
-    fut.wait();
+    t.submit(disp, "Hello World!");
 
     return 0;
 }
 ```
 
-## Misc
+## What's next?
 
-Branches:
-
-- master: stable release
-- dev: features development
-- next: test release
+- Working on introducing scheduled tasks
+- Maybe try to introduce something like sequential streams mechanics
