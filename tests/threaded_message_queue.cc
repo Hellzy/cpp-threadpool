@@ -14,7 +14,7 @@ void all_receive_once()
 
     auto rcvOnce = [&]()
     {
-        auto& payload = msg_queue.receive();
+        int payload = msg_queue.receive();
         payloadsReceived[payload] = true;
     };
 
@@ -47,7 +47,7 @@ void simultaneous_send_receive()
     {
         for (int i = 0; i < 50; ++i)
         {
-            auto& payload = msg_queue.receive();
+            int payload = msg_queue.receive();
             payloadsReceived[payload] = true;
         }
     };

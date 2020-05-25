@@ -5,7 +5,7 @@
 
 int main()
 {
-    MessageQueue<int> msg_queue;
+    MessageQueue<int> msg_queue(true);
 
     for (int i = 0; i < 10; ++i)
         msg_queue.send(i);
